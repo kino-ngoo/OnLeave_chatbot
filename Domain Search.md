@@ -1,4 +1,6 @@
-## Domain Search
+# Domain Search
+
+### Chatbot
 
 - #### [寫一隻聊天機器人(chatbot)，然後呢？](https://noob.tw/chatbot-and-then/)
 
@@ -34,3 +36,27 @@
 - [LUIS.ai](https://www.luis.ai/home) (by Microsoft)
 - [Wit.ai](https://wit.ai/) (by Facebook)
 - [Watson Conversation](https://www.ibm.com/watson/services/conversation/) (by IBM)
+
+中文的情感分析比較少，大多都是英文的，但我發現把句子翻成英文再去做分析其實不會差太多，除非像是「幫QQ」這種特殊字眼，或是翻譯不到味的可能會差很多。
+
+Google 最近有開放一個分析平台叫 Chatbase，開發者可以在上面分析聊天對象、整體趨勢和狀況，藉此提高 Chatbot 的準確性、提升使用者體驗等等，有點像是 Chatbot 版本的 Google Analytics。
+
+- #### [以客戶端優先的角度來思考 Bot](https://hackmd.io/c/mopcon-2017/https%3A%2F%2Fhackmd.io%2FGwRgzAnAJgxg7CAtDMAjATIgLFgHEgQxADMpFUSBWMEYABhlSmCA)
+
+四個一定要考慮到的問題
+
+1. State v.s Data
+2. 點到之前的訊息會發生什麼事情
+3. 不同的 provider，API 會完全不一樣
+4. AI/NLP
+   - 有無地方跟 NLP 組合
+   - 有無地方收集資料
+
+### Skype for Business Chatbot
+
+- [Enterprise Chatbots on Skype for Business – Chatbots Magazine](https://chatbotsmagazine.com/enterprise-chatbots-on-skype-for-business-af635f346f5c)
+
+**UCWA**(Unified Communications Web API)
+
+- [Skype for Business Bot Framework (Preview) | Microsoft Docs](https://docs.microsoft.com/en-us/skype-sdk/skype-for-business-bot-framework/docs/overview#create-a-skype-for-business-bot)
+- 
