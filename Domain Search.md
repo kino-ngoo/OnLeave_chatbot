@@ -52,6 +52,10 @@ Google 最近有開放一個分析平台叫 Chatbase，開發者可以在上面�
    - 有無地方跟 NLP 組合
    - 有無地方收集資料
 
+#### [關於寫對談機器人 (bot) 的兩三事 – Eric ShangKuan – Medium](https://medium.com/@ericsk/關於寫對談機器人-bot-的兩三事-f28f1a0ce7c4)
+
+[ericsk/luis-vacation-bot: 使用 LUIS 而知道如何處理請假的對談機器人](https://github.com/ericsk/luis-vacation-bot)
+
 #### ngrok
 
 [測試 webhook 不再煩惱：ngrok | TechBridge 技術共筆部落格](https://blog.techbridge.cc/2018/05/24/ngrok/)
@@ -81,4 +85,6 @@ Google 最近有開放一個分析平台叫 Chatbase，開發者可以在上面�
 開發者可以在Github上使用BotBuilder RealTimeMediaCalling，讓Skype機器人可以進行視訊對話。
 
 #### [Office 365 机器人（Bot）开发入门指南 · Office 365 开发入门指南](https://chenxizhang.gitbooks.io/office365devguide/content/docs/botframeworkguide.html)
+
+#### [Microsoft/BotBuilder-Samples: Welcome to the BotBuilder samples repository. Here you will find task-focused samples in C# and Node.js to help you get started with the Bot Builder SDK!](https://github.com/Microsoft/BotBuilder-Samples)
 
