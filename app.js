@@ -1,50 +1,29 @@
+var http = require('http');
 var restify = require('restify');
 var builder = require('botbuilder');
-//=========================================================
-// Bot Setup
-//=========================================================
+
 // Setup Restify Server
 var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 8080, function () {
-   console.log('%s listening to %s', server.name, server.url);
+server.listen(process.env.port || process.env.PORT || 3978, function () {
+   console.log('%s listening to %s', server.name, server.url); 
 });
-// Create chat bot
+
+// Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
-    appId: "Your App ID Here",
-    appPassword: "Your App Password Here"
+    appId: process.env.MicrosoftAppId,
+    appPassword: process.env.MicrosoftAppPassword
 });
-var bot = new builder.UniversalBot(connector);
+
+// Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
+var bot = new builder.UniversalBot(connector, function (session) {
+    session.send("收到：%s，字串長度：%s", session.message.text, session.message.text.length);
+});
+
+// Listen for messages from users 
 server.post('/api/messages', connector.listen());
-//Bot on
-bot.on('contactRelationUpdate', function (message) {
-    if (message.action === 'add') {
-        var name = message.user ? message.user.name : null;
-        var reply = new builder.Message()
-                .address(message.address)
-                .text("Hello %s... Thanks for adding me. Say 'hello' to see some great demos.", name || 'there');
-        bot.send(reply);
-    } else {
-        // delete their data
-    }
-});
-bot.on('typing', function (message) {
-  // User is typing
-});
-bot.on('deleteUserData', function (message) {
-    // User asked to delete their data
-});
-//=========================================================
-// Bots Dialogs
-//=========================================================
-String.prototype.contains = function(content){
-  return this.indexOf(content) !== -1;
-}
-bot.dialog('/', function (session) {
-    if(session.message.text.toLowerCase().contains('hello')){
-      session.send(`Hey, How are you?`);
-      }else if(session.message.text.toLowerCase().contains('help')){
-        session.send(`How can I help you?`);
-      }else{
-        session.send(`Sorry I don't understand you...`);
-      }
-});
+
+// http.createServer(function (req, res) {
+//   res.writeHead(200, {'Content-Type': 'text/plain'});
+//   res.end('Hello World\n');
+// }).listen(1337, '127.0.0.1');
+// console.log('Server running at http://127.0.0.1:1337/');
