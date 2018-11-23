@@ -1,0 +1,18 @@
+{
+    "name": "OnLeave_Bot",
+    "description": "",
+    "services": [
+        {
+            "type": "endpoint",
+            "appId": "",
+            "appPassword": "",
+            "endpoint": "http://127.0.0.1:3978/api/messages",
+            "id": "a522fa50-eebe-11e8-84d0-7fa89c18daef",
+            "name": "http://127.0.0.1:3978/api/messages"
+        }
+    ],
+    "padlock": "",
+    "version": "2.0",
+    "overrides": null,
+    "path": "/Users/apple/repos/OnLeave_chatbot/OnLeave_Bot.bot"
+}

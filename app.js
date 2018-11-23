@@ -1,6 +1,6 @@
-var http = require('http');
-var restify = require('restify');
-var builder = require('botbuilder');
+const http = require('http');
+const restify = require('restify');
+const builder = require('botbuilder');
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -14,13 +14,14 @@ var connector = new builder.ChatConnector({
     appPassword: process.env.MicrosoftAppPassword
 });
 
+// Listen for messages from users 
+server.post('/api/messages', connector.listen());
+
+// Hello World! in Bot
 // Receive messages from the user and respond by echoing each message back (prefixed with 'You said:')
 var bot = new builder.UniversalBot(connector, function (session) {
     session.send("收到：%s，字串長度：%s", session.message.text, session.message.text.length);
 });
-
-// Listen for messages from users 
-server.post('/api/messages', connector.listen());
 
 // http.createServer(function (req, res) {
 //   res.writeHead(200, {'Content-Type': 'text/plain'});
