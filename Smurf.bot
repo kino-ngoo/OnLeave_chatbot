@@ -4,15 +4,15 @@
     "services": [
         {
             "type": "endpoint",
-            "appId": "",
-            "appPassword": "",
+            "appId": "c150192f-48d3-4bc5-82b0-1f0f9abb258f",
+            "appPassword": "warTCL96+)ejurFGVP904|)",
             "endpoint": "http://127.0.0.1:3978/api/messages",
             "id": "a522fa50-eebe-11e8-84d0-7fa89c18daef",
-            "name": "http://127.0.0.1:3978/api/messages"
+            "name": "Smurf"
         }
     ],
     "padlock": "",
     "version": "2.0",
-    "overrides": null,
-    "path": "/Users/apple/repos/OnLeave_chatbot/OnLeave_Bot.bot"
+    "path": "/Users/apple/repos/OnLeave_chatbot/Smurf.bot",
+    "overrides": null
 }
