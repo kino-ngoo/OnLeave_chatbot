@@ -19,6 +19,9 @@
   "homepage": "https://github.com/micky619/OnLeave_chatbot#readme",
   "dependencies": {
     "botbuilder": "^3.15.0",
+    "botbuilder-azure": "^4.1.7",
+    "botbuilder-dialogs": "^4.1.6",
+    "botframework-config": "^4.1.6",
     "dotenv-extended": "^2.3.0",
     "restify": "^7.2.2"
   }
