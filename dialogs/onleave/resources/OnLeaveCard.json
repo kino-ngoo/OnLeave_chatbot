@@ -1,0 +1,49 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.0",
+  "body": [
+    // {
+    //   "type": "Image",
+    //   "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtB3AwMUeNoq4gUBGe6Ocj8kyh3bXa9ZbV7u1fVKQoyKFHdkqU",
+    //   "size": "stretch"
+    // },
+    {
+      "type": "TextBlock",
+      "spacing": "medium",
+      "size": "default",
+      "weight": "bolder",
+      // "text": "Welcome to Bot Framework!",
+      "text": "Employee On Leave Record",
+      "wrap": true,
+      "maxLines": 0
+    },
+    {
+      "type": "TextBlock",
+      "size": "default",
+      "isSubtle": "yes",
+      "text": "Taking a break is for accomplishing a longer journey.",
+      "wrap": true,
+      "maxLines": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.OpenUrl",
+      // "title": "Get an overview",
+      "title": "Go to Webpage",
+      // "url": "https://docs.microsoft.com/en-us/azure/bot-service/?view=azure-bot-service-4.0"
+      "url": "https://accportal.accton.com.tw/resource/Pages/AccmisDefault.aspx?u=https%3A%2F%2Faccmis.accton.com.tw%2Fsystem%2FHPT%2FHPT001%2FCreate_Doc%3Ft%3D2%26tt%3DAccton%20TW%26ttt%3DHPT001"
+    },
+    // {
+    //   "type": "Action.OpenUrl",
+    //   "title": "Ask a question",
+    //   "url": "https://stackoverflow.com/questions/tagged/botframework"
+    // },
+    // {
+    //   "type": "Action.OpenUrl",
+    //   "title": "Learn how to deploy",
+    //   "url": "https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-howto-deploy-azure?view=azure-bot-service-4.0"
+    // }
+  ]
+}

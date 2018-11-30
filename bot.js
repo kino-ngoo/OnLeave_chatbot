@@ -1,181 +1,257 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const { ActivityTypes } = require('botbuilder');
-const { ChoicePrompt, DialogSet, NumberPrompt, TextPrompt, WaterfallDialog } = require('botbuilder-dialogs');
+// bot.js is your main bot dialog entry point for handling activity types
 
+// Import required Bot Builder'
+const { express } = require('express');
+const { builder } = require('botbuilder');
+const { botbuilder_azure } = require('botbuilder-azure');
+const { ActivityTypes, CardFactory } = require('botbuilder');
+const { LuisRecognizer } = require('botbuilder-ai');
+const { DialogSet, DialogTurnStatus } = require('botbuilder-dialogs');
+const { nodejieba } = require('nodejieba');
+
+const { UserProfile } = require('./dialogs/greeting/userProfile');
+const { WelcomeCard } = require('./dialogs/welcome');
+const { GreetingDialog } = require('./dialogs/greeting');
+// const { OnLeaveDialog } = require('./dialogs/onleave');
+// const { LeaveProfile } = require('./dialogs/onleave/leaveProfile');
+
+// Greeting Dialog ID
+const GREETING_DIALOG = 'greetingDialog';
+
+// State Accessor Properties
 const DIALOG_STATE_PROPERTY = 'dialogState';
-const USER_PROFILE_PROPERTY = 'user';
+const USER_PROFILE_PROPERTY = 'userProfileProperty';
 
-const WHO_ARE_YOU = 'who_are_you';
-const HELLO_USER = 'hello_user';
+// LUIS service type entry as defined in the .bot file.
+const LUIS_CONFIGURATION = 'BasicBotLuisApplication';
 
-const NAME_PROMPT = 'name_prompt';
-const CONFIRM_PROMPT = 'confirm_prompt';
-const AGE_PROMPT = 'age_prompt';
+// Supported LUIS Intents.
+const GREETING_INTENT = 'Greeting';
+const CANCEL_INTENT = 'Cancel';
+const HELP_INTENT = 'Help';
+const NONE_INTENT = 'None';
 
-class LoggerBot {
+// Supported LUIS Entities, defined in ./dialogs/greeting/resources/greeting.lu
+const USER_NAME_ENTITIES = ['userName', 'userName_patternAny'];
+const USER_LOCATION_ENTITIES = ['userLocation', 'userLocation_patternAny'];
+
+/**
+ * Demonstrates the following concepts:
+ *  Displaying a Welcome Card, using Adaptive Card technology
+ *  Use LUIS to model Greetings, Help, and Cancel interactions
+ *  Use a Waterfall dialog to model multi-turn conversation flow
+ *  Use custom prompts to validate user input
+ *  Store conversation and user state
+ *  Handle conversation interruptions
+ */
+class BasicBot {
     /**
+     * Constructs the three pieces necessary for this bot to operate:
+     * 1. StatePropertyAccessor for conversation state
+     * 2. StatePropertyAccess for user state
+     * 3. LUIS client
+     * 4. DialogSet to handle our GreetingDialog
      *
-     * @param {ConversationState} conversationState A ConversationState object used to store the dialog state.
-     * @param {UserState} userState A UserState object used to store values specific to the user.
+     * @param {ConversationState} conversationState property accessor
+     * @param {UserState} userState property accessor
+     * @param {BotConfiguration} botConfig contents of the .bot file
      */
-    constructor(conversationState, userState) {
-        // Create a new state accessor property. See https://aka.ms/about-bot-state-accessors to learn more about bot state and state accessors.
+    constructor(conversationState, userState, botConfig) {
+        if (!conversationState) throw new Error('Missing parameter.  conversationState is required');
+        if (!userState) throw new Error('Missing parameter.  userState is required');
+        if (!botConfig) throw new Error('Missing parameter.  botConfig is required');
+
+        // Add the LUIS recognizer.
+        const luisConfig = botConfig.findServiceByNameOrId(LUIS_CONFIGURATION);
+        if (!luisConfig || !luisConfig.appId) throw new Error('Missing LUIS configuration. Please follow README.MD to create required LUIS applications.\n\n');
+        const luisEndpoint = luisConfig.region && luisConfig.region.indexOf('https://') === 0 ? luisConfig.region : luisConfig.getEndpoint();
+        this.luisRecognizer = new LuisRecognizer({
+            applicationId: luisConfig.appId,
+            endpoint: luisEndpoint,
+            // CAUTION: Its better to assign and use a subscription key instead of authoring key here.
+            endpointKey: luisConfig.authoringKey
+        });
+
+        // Create the property accessors for user and conversation state
+        this.userProfileAccessor = userState.createProperty(USER_PROFILE_PROPERTY);
+        this.dialogState = conversationState.createProperty(DIALOG_STATE_PROPERTY);
+
+        // Create top-level dialog(s)
+        this.dialogs = new DialogSet(this.dialogState);
+        // Add the Greeting dialog to the set
+        this.dialogs.add(new GreetingDialog(GREETING_DIALOG, this.userProfileAccessor));
+
         this.conversationState = conversationState;
         this.userState = userState;
-
-        this.dialogState = this.conversationState.createProperty(DIALOG_STATE_PROPERTY);
-
-        this.userProfile = this.userState.createProperty(USER_PROFILE_PROPERTY);
-
-        this.dialogs = new DialogSet(this.dialogState);
-
-        // Add prompts that will be used by the main dialogs.
-        this.dialogs.add(new TextPrompt(NAME_PROMPT));
-        this.dialogs.add(new ChoicePrompt(CONFIRM_PROMPT));
-        this.dialogs.add(new NumberPrompt(AGE_PROMPT, async (prompt) => {
-            if (prompt.recognized.succeeded) {
-                if (prompt.recognized.value <= 0) {
-                    await prompt.context.sendActivity(`Your age can't be less than or equal to zero.`);
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-
-            return false;
-        }));
-
-        // Create a dialog that asks the user for their name.
-        this.dialogs.add(new WaterfallDialog(WHO_ARE_YOU, [
-            this.promptForName.bind(this),
-            this.confirmAgePrompt.bind(this),
-            this.promptForAge.bind(this),
-            this.captureAge.bind(this)
-        ]));
-
-        // Create a dialog that displays a user name after it has been collected.
-        this.dialogs.add(new WaterfallDialog(HELLO_USER, [
-            this.displayProfile.bind(this)
-        ]));
-    }
-
-    // This step in the dialog prompts the user for their name.
-    async promptForName(step) {
-        return await step.prompt(NAME_PROMPT, `What is your name, human?`);
-    }
-
-    // This step captures the user's name, then prompts whether or not to collect an age.
-    async confirmAgePrompt(step) {
-        const user = await this.userProfile.get(step.context, {});
-        user.name = step.result;
-        await this.userProfile.set(step.context, user);
-        await step.prompt(CONFIRM_PROMPT, 'Do you want to give your age?', ['yes', 'no']);
-    }
-
-    // This step checks the user's response - if yes, the bot will proceed to prompt for age.
-    // Otherwise, the bot will skip the age step.
-    async promptForAge(step) {
-        if (step.result && step.result.value === 'yes') {
-            return await step.prompt(AGE_PROMPT, {
-                prompt: `What is your age?`,
-                retryPrompt: 'Sorry, please specify your age as a positive number or say cancel.'
-            }
-            );
-        } else {
-            return await step.next(-1);
-        }
-    }
-
-    // This step captures the user's age.
-    async captureAge(step) {
-        const user = await this.userProfile.get(step.context, {});
-        if (step.result !== -1) {
-            user.age = step.result;
-            await this.userProfile.set(step.context, user);
-            await step.context.sendActivity(`I will remember that you are ${ step.result } years old.`);
-        } else {
-            await step.context.sendActivity(`No age given.`);
-        }
-        return await step.endDialog();
-    }
-
-    // This step displays the captured information back to the user.
-    async displayProfile(step) {
-        const user = await this.userProfile.get(step.context, {});
-        if (user.age) {
-            await step.context.sendActivity({ value: 'endOfInput', text: `Your name is ${ user.name } and you are ${ user.age } years old.` });
-        } else {
-            await step.context.sendActivity({ value: 'endOfInput', text: `Your name is ${ user.name } and you did not share your age.` });
-        }
-        return await step.endDialog();
     }
 
     /**
+     * Driver code that does one of the following:
+     * 1. Display a welcome card upon receiving ConversationUpdate activity
+     * 2. Use LUIS to recognize intents for incoming user message
+     * 3. Start a greeting dialog
+     * 4. Optionally handle Cancel or Help interruptions
      *
-     * @param {TurnContext} turnContext A TurnContext object that will be interpreted and acted upon by the bot.
+     * @param {Context} context turn context from the adapter
      */
-    async onTurn(turnContext) {
-        // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
-        if (turnContext.activity.type === ActivityTypes.Message) {
-            // Create a dialog context object.
-            const dc = await this.dialogs.createContext(turnContext);
+    async onTurn(context) {
+        // Handle Message activity type, which is the main activity type for shown within a conversational interface
+        // Message activities may contain text, speech, interactive cards, and binary or unknown attachments.
+        // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
+        if (context.activity.type === ActivityTypes.Message) {
+            let dialogResult;
+            // Create a dialog context
+            const dc = await this.dialogs.createContext(context);
 
-            const utterance = (turnContext.activity.text || '').trim().toLowerCase();
-            if (utterance === 'cancel') {
-                if (dc.activeDialog) {
-                    await dc.cancelAllDialogs();
-                    await dc.context.sendActivity(`Ok... canceled.`);
-                } else {
-                    await dc.context.sendActivity(`Nothing to cancel.`);
-                }
+            // Perform a call to LUIS to retrieve results for the current activity message.
+            const results = await this.luisRecognizer.recognize(context);
+            const topIntent = LuisRecognizer.topIntent(results);
+
+            // update user profile property with any entities captured by LUIS
+            // This could be user responding with their name or city while we are in the middle of greeting dialog,
+            // or user saying something like 'i'm {userName}' while we have no active multi-turn dialog.
+            await this.updateUserProfile(results, context);
+
+            // Based on LUIS topIntent, evaluate if we have an interruption.
+            // Interruption here refers to user looking for help/ cancel existing dialog
+            const interrupted = await this.isTurnInterrupted(dc, results);
+            if (interrupted) {
+                if (dc.activeDialog !== undefined) {
+                    // issue a re-prompt on the active dialog
+                    dialogResult = await dc.repromptDialog();
+                } // Else: We dont have an active dialog so nothing to continue here.
+            } else {
+                // No interruption. Continue any active dialogs.
+                dialogResult = await dc.continueDialog();
             }
 
-            // If the bot has not yet responded, continue processing the current dialog.
-            await dc.continueDialog();
-
-            // Start the sample dialog in response to any other input.
-            if (!turnContext.responded) {
-                const user = await this.userProfile.get(dc.context, {});
-                if (user.name) {
-                    await dc.beginDialog(HELLO_USER);
-                } else {
-                    await dc.beginDialog(WHO_ARE_YOU);
+            // If no active dialog or no active dialog has responded,
+            if (!dc.context.responded) {
+                // Switch on return results from any active dialog.
+                switch (dialogResult.status) {
+                    // dc.continueDialog() returns DialogTurnStatus.empty if there are no active dialogs
+                    case DialogTurnStatus.empty:
+                        // Determine what we should do based on the top intent from LUIS.
+                        switch (topIntent) {
+                            case GREETING_INTENT:
+                                await dc.beginDialog(GREETING_DIALOG);
+                                break;
+                            case NONE_INTENT:
+                            default:
+                                // None or no intent identified, either way, let's provide some help
+                                // to the user
+                                await dc.context.sendActivity(`I didn't understand what you just said to me.`);
+                                break;
+                            }
+                        break;
+                    case DialogTurnStatus.waiting:
+                        // The active dialog is waiting for a response from the user, so do nothing.
+                        break;
+                    case DialogTurnStatus.complete:
+                        // All child dialogs have ended. so do nothing.
+                        break;
+                    default:
+                        // Unrecognized status from child dialog. Cancel all dialogs.
+                        await dc.cancelAllDialogs();
+                        break;
                 }
             }
-        } else if (
-            turnContext.activity.type === ActivityTypes.ConversationUpdate
-        ) {
+        } else if (context.activity.type === ActivityTypes.ConversationUpdate) {
+            // Handle ConversationUpdate activity type, which is used to indicates new members add to
+            // the conversation.
+            // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
+
             // Do we have any new members added to the conversation?
-            if (turnContext.activity.membersAdded.length !== 0) {
+            if (context.activity.membersAdded.length !== 0) {
                 // Iterate over all new members added to the conversation
-                for (var idx in turnContext.activity.membersAdded) {
-                    // Greet anyone that was not the target (recipient) of this message.
-                    // Since the bot is the recipient for events from the channel,
-                    // context.activity.membersAdded === context.activity.recipient.Id indicates the
-                    // bot was added to the conversation, and the opposite indicates this is a user.
-                    if (turnContext.activity.membersAdded[idx].id !== turnContext.activity.recipient.id) {
-                        // Send a "this is what the bot does" message.
-                        const description = [
-                            'I am a bot that demonstrates custom logging.',
-                            'We will have a short conversation where I ask a few questions ',
-                            'to collect your name and age, then store those values in UserState for later use.',
-                            'after this you will be able to find a log of the conversation in the folder set by the transcriptsPath environment variable',
-                            'Say anything to continue.'
-                        ];
-                        await turnContext.sendActivity(description.join(' '));
+                for (var idx in context.activity.membersAdded) {
+                    // Greet anyone that was not the target (recipient) of this message
+                    // the 'bot' is the recipient for events from the channel,
+                    // context.activity.membersAdded == context.activity.recipient.Id indicates the
+                    // bot was added to the conversation.
+                    if (context.activity.membersAdded[idx].id !== context.activity.recipient.id) {
+                        // Welcome user.
+                        // When activity type is "conversationUpdate" and the member joining the conversation is the bot
+                        // we will send our Welcome Adaptive Card.  This will only be sent once, when the Bot joins conversation
+                        // To learn more about Adaptive Cards, see https://aka.ms/msbot-adaptivecards for more details.
+                        const welcomeCard = CardFactory.adaptiveCard(WelcomeCard);
+                        await context.sendActivity({ attachments: [welcomeCard] });
                     }
                 }
             }
         }
 
-        // Save changes to the user state.
-        await this.userState.saveChanges(turnContext);
+        // make sure to persist state at the end of a turn.
+        await this.conversationState.saveChanges(context);
+        await this.userState.saveChanges(context);
+    }
 
-        // End this turn by saving changes to the conversation state.
-        await this.conversationState.saveChanges(turnContext);
+    /**
+     * Look at the LUIS results and determine if we need to handle
+     * an interruptions due to a Help or Cancel intent
+     *
+     * @param {DialogContext} dc - dialog context
+     * @param {LuisResults} luisResults - LUIS recognizer results
+     */
+    async isTurnInterrupted(dc, luisResults) {
+        const topIntent = LuisRecognizer.topIntent(luisResults);
+
+        // see if there are anh conversation interrupts we need to handle
+        if (topIntent === CANCEL_INTENT) {
+            if (dc.activeDialog) {
+                // cancel all active dialog (clean the stack)
+                await dc.cancelAllDialogs();
+                await dc.context.sendActivity(`Ok.  I've cancelled our last activity.`);
+            } else {
+                await dc.context.sendActivity(`I don't have anything to cancel.`);
+            }
+            return true; // this is an interruption
+        }
+
+        if (topIntent === HELP_INTENT) {
+            await dc.context.sendActivity(`Let me try to provide some help.`);
+            await dc.context.sendActivity(`I understand greetings, being asked for help, or being asked to cancel what I am doing.`);
+            return true; // this is an interruption
+        }
+        return false; // this is not an interruption
+    }
+
+    /**
+     * Helper function to update user profile with entities returned by LUIS.
+     *
+     * @param {LuisResults} luisResults - LUIS recognizer results
+     * @param {DialogContext} dc - dialog context
+     */
+    async updateUserProfile(luisResult, context) {
+        // Do we have any entities?
+        if (Object.keys(luisResult.entities).length !== 1) {
+            // get userProfile object using the accessor
+            let userProfile = await this.userProfileAccessor.get(context);
+            if (userProfile === undefined) {
+                userProfile = new UserProfile();
+            }
+            // see if we have any user name entities
+            USER_NAME_ENTITIES.forEach(name => {
+                if (luisResult.entities[name] !== undefined) {
+                    let lowerCaseName = luisResult.entities[name][0];
+                    // capitalize and set user name
+                    userProfile.name = lowerCaseName.charAt(0).toUpperCase() + lowerCaseName.substr(1);
+                }
+            });
+            USER_LOCATION_ENTITIES.forEach(id => {
+                if (luisResult.entities[id] !== undefined) {
+                    let lowerCaseId = luisResult.entities[id][0];
+                    // capitalize and set user name
+                    userProfile.id = lowerCaseId.charAt(0).toUpperCase() + lowerCaseId.substr(1);
+                }
+            });
+            // set the new values
+            await this.userProfileAccessor.set(context, userProfile);
+        }
     }
 }
 
-module.exports.LoggerBot = LoggerBot;
+module.exports.BasicBot = BasicBot;

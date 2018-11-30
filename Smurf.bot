@@ -1,18 +1,61 @@
 {
-    "name": "OnLeave_Bot",
-    "description": "",
-    "services": [
-        {
-            "type": "endpoint",
-            "appId": "c150192f-48d3-4bc5-82b0-1f0f9abb258f",
-            "appPassword": "warTCL96+)ejurFGVP904|)",
-            "endpoint": "http://127.0.0.1:3978/api/messages",
-            "id": "a522fa50-eebe-11e8-84d0-7fa89c18daef",
-            "name": "Smurf"
-        }
-    ],
-    "padlock": "",
-    "version": "2.0",
-    "path": "/Users/apple/repos/OnLeave_chatbot/Smurf.bot",
-    "overrides": null
+  "name": "Smurf",
+  "padlock": "WzPxguI7lMbwvYqTSOIyTA==!kFUk2ArU20TikWryGWtwftqRxiDb/Sli5fhlgdQAEjKS3sJP9W5Qs4hm9lc0k+7O",
+  "version": "2.0",
+  "services": [
+    {
+      "tenantId": "b8868906-22f4-421b-874b-cc3b045bc9ce",
+      "subscriptionId": "2446841e-7eab-47b7-8828-84c42dc189bb",
+      "resourceGroup": "AItest",
+      "serviceName": "Smurf",
+      "type": "abs",
+      "name": "Smurf",
+      "id": "1"
+    },
+    {
+      "connectionString": "rdcYDXVMUB90EKXO3aq4mA==!vbl7Q7BaccoBI4XLUcVF98kYk8NvKhBEQq76wEbefUGOy3tHmRcxlzPzTxD3UE2+ynrZuwnyLedQ52CXGscON1COcZrkxne0CaJDd9LdKvKwQNf8l5SbnEMfG/MEc2YW0ape/zfNqkym6Pi7UA5if4APWfLgFiFzW4K6zoCJBqmVHZXf+xI22WXRu59TJz+83yUlwNuzaiOxVmlYlsNOLRPC27y69kbPrPRJv7z4eOQ=",
+      "tenantId": "b8868906-22f4-421b-874b-cc3b045bc9ce",
+      "subscriptionId": "2446841e-7eab-47b7-8828-84c42dc189bb",
+      "resourceGroup": "AItest",
+      "serviceName": "luislanguagebot57",
+      "type": "blob",
+      "id": "2"
+    },
+    {
+      "appId": "",
+      "appPassword": "",
+      "endpoint": "http://localhost:3978/api/messages",
+      "type": "endpoint",
+      "name": "development",
+      "id": "3"
+    },
+    {
+      "appId": "c150192f-48d3-4bc5-82b0-1f0f9abb258f",
+      "appPassword": "pSVk89NK4PLLlDBSpOZMmw==!M6mR9m5bu9or64fQpKhbGg4hpYqLZ7dN7leck3t/C5c=",
+      "endpoint": "https://smurf-bot.azurewebsites.net/api/messages",
+      "type": "endpoint",
+      "name": "production",
+      "id": "4"
+    },
+    {
+      "instrumentationKey": "TJIfSmOOk8o+xLDr7C7wxg==!jDVPrrSzcQU2eeiuWEmLgiTUDQ4p5p8Sy8gEzPJkOJA5bCrD40X4NtKVDHYD45t0",
+      "applicationId": "6d30f224-fecd-4145-9703-82762354f25d",
+      "apiKeys": {},
+      "tenantId": "b8868906-22f4-421b-874b-cc3b045bc9ce",
+      "subscriptionId": "2446841e-7eab-47b7-8828-84c42dc189bb",
+      "resourceGroup": "AItest",
+      "serviceName": "Smurfgcbjla",
+      "type": "appInsights",
+      "id": "5"
+    },
+    {
+      "appId": "34f13162-4393-4266-8d90-297a1309cc25",
+      "authoringKey": "cwnKqUl7llS4H5RSrsLmUg==!nu+igvnbxpcJa7Qpu36fKn+h1wY3KF0oAIOUfL3sVrh9v5CRjeS75wXyqOJ/Tdgb",
+      "version": "0.1",
+      "region": "australiaeast",
+      "type": "luis",
+      "name": "BasicBotLuisApplication",
+      "id": "6"
+    }
+  ]
 }
